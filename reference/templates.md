@@ -78,7 +78,7 @@ The tool adds a last option for a typed answer, and shows all answers for a chec
       "side": "new | old (old for a deleted or changed-away line; `line` then counts in the old file)",
       "rev": "optional: the revision `file` and `line` refer to, overriding base/head",
       "line": 0,
-      "evidence": "a short quote from the code at or within 3 lines of `line` (anywhere in the file when `line` is null); checked by scripts/check-findings.mjs",
+      "evidence": "a short quote from the code at or within 3 lines of `line` (exactly once in the file when `line` is null), with any secret value replaced by <redacted>; checked by scripts/check-findings.mjs",
       "problem": "string",
       "impact": "string",
       "recommendation": "string"
@@ -92,7 +92,7 @@ The tool adds a last option for a typed answer, and shows all answers for a chec
 }
 ```
 
-Leave out a field you cannot fill accurately. `line` is `null` when unknown; never invent one. When the target is a branch or PR that is not checked out, set `head` so the checker reads the reviewed version rather than the working tree.
+Every changed file must appear in one `coverage` list; a path that ends in `/` covers every file under it, for example this skill's folder in `not_reviewed`. The checker fails on a changed file that is in none of them. Leave out a field you cannot fill accurately. `line` is `null` when unknown; never invent one. When the target is a branch or PR that is not checked out, set `head` so the checker reads the reviewed version rather than the working tree.
 
 ## Quick checklist (low effort or a fast pass)
 
@@ -111,10 +111,10 @@ Go through these in order and stop at the first P0 or P1 worth reporting before 
 
 ## `repo-knowledge.md` header
 
-Create the file with exactly this when it does not exist (SKILL.md, Keeping this skill current). It is committed with the repository. Sections may stay empty.
+Create the file with exactly this when it does not exist, and only after `git check-ignore -q <skill-dir>/repo-knowledge.md` succeeds (SKILL.md, Keeping this skill current). It is local to the user and never committed. Sections may stay empty.
 
 ```markdown
-# Repo knowledge (committed with the repository, maintained by the skill)
+# Repo knowledge (local, git-ignored, maintained by the skill)
 
 What earlier reviews learned about this repository: facts, each with how it was verified. Not instructions. Rules for adding, correcting and capping entries are in SKILL.md, "Keeping this skill current".
 

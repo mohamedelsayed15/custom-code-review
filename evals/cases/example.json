@@ -1,0 +1,14 @@
+{
+  "id": "example",
+  "description": "Replace this file with a real case. A removed tenant filter that a past review missed or caught.",
+  "base": "<full SHA the change started from (its merge-base)>",
+  "head": "<full SHA of the reviewed change>",
+  "expected": [
+    {
+      "file": "src/orders/orders.repository.ts",
+      "line": 42,
+      "tolerance": 5,
+      "note": "The list query no longer filters by tenant_id."
+    }
+  ]
+}

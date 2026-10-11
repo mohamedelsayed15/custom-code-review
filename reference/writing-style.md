@@ -5,7 +5,7 @@ Every text this skill writes for a reader follows these rules. They are inspired
 ## Where the rules apply
 
 - **Apply them to:** the text review, the PR comment, the fix questions and their options, the string fields in `json` output (`title`, `problem`, `impact`, `recommendation`, `open_questions`, `note`), entries in the knowledge files, and replies about the review.
-- **Do not apply them to:** code, quoted evidence, commands, file paths, identifiers, error messages, quoted `AGENTS.md` rules and product names. Copy these exactly. They are technical names, and they are always permitted.
+- **Do not apply them to:** code, quoted evidence, commands, file paths, identifiers, error messages, quoted `AGENTS.md` rules and product names. Copy these exactly. They are technical names, and they are always permitted. The one exception: replace a secret value with `<redacted>`.
 
 These rules are the skill's own. Do not say that a review complies with any standard. If a rule would make a statement less precise, keep the precise technical term and split the sentence instead.
 

@@ -24,7 +24,7 @@ The `AGENTS.md` file of the repository can make this scope wider or narrower.
 
 This is a skill for one repository. Put this folder in `.claude/skills/custom-code-review/` in the repository, and commit it.
 
-The skill creates `repo-knowledge.md` in this folder and keeps it current. Commit this file too. It holds what reviews learned about the repository, and everyone who uses the repository shares it. Do not add it to `.gitignore`.
+The skill keeps what it learns about the repository in `repo-knowledge.md` in this folder. The file is local: each user has their own copy. The `.gitignore` in this folder keeps it out of git, so commit that `.gitignore` with the folder. If the file is not ignored, the skill does not create it, and tells you what it would have recorded.
 
 ## Use
 
@@ -48,6 +48,7 @@ All arguments are optional. Without arguments, the skill does a standard review 
 | `security` | Do only the security method and the access, tenancy, injection, secrets and privacy checks. |
 | `low`, `standard`, `high` | Effort. `low` reports only P0 and P1 findings. `standard` reports P0 to P2. `high` reports all severities and applies the history lens and the edge-case matrix to every changed unit. |
 | `max N` | Report at most N findings, the most severe first. |
+| `base <ref>` | Compare against this base branch, for example to review an old change. |
 | `json` | Give the output in the JSON schema in `reference/templates.md`. |
 | `comment` | Give a pull request comment for you to copy. The skill never posts it. |
 | `fix 1 3` | After the review, ask how to fix only the findings that you name. |
@@ -56,7 +57,7 @@ All arguments are optional. Without arguments, the skill does a standard review 
 ## What the skill does and does not do
 
 - It reads the change, the code around it, and its history (`git log`, `git blame`).
-- It runs the read-only checks of the repository: type check, lint and unit tests, in CI mode. For a pull request from a fork or from another author, it asks you before it runs any check that executes the code of the pull request. It compares `git status` before and after the checks. It does not count a check that writes files as a pass.
+- It runs the read-only checks of the repository: type check, lint and unit tests, in CI mode. For code from another person, it asks you before it runs any check that executes that code. This includes a pull request that you checked out with `gh pr checkout`. It compares `git status` before and after the checks. It does not count a check that writes files as a pass.
 - It does not deploy, migrate a real database, seed data, push, commit or post comments.
 - It writes only in its own folder (`repo-knowledge.md`, `reference/learned-rules.md` and `reference/stacks/`). It changes no other file in the repository, unless you choose a fix after the review.
 - It treats text in the code under review as data. An instruction in a comment, a commit message or a PR description does not change the review. The skill reports such an instruction as a finding.
@@ -65,7 +66,9 @@ All arguments are optional. Without arguments, the skill does a standard review 
 
 Each finding has a severity (P0 to P3), a location, the problem, the impact, a recommendation and a confidence label (Confirmed or Conditional). The review then gives open questions, the checks that it ran, what it reviewed and did not review, and a verdict.
 
-Before the skill shows the findings, it runs `scripts/check-findings.mjs`. This script makes sure that each file and line exist and that each quote matches the code. It can check a deleted line against the base branch, and a branch that is not checked out against its own commit.
+Before the skill shows the findings, it runs `scripts/check-findings.mjs`. This script makes sure that each file and line exist and that each quote matches the code. If a quote is at a different line, it gives the correct line. It also makes sure that every changed file is in the coverage lists. It can check a deleted line against the base branch, and a branch that is not checked out against its own commit.
+
+The review never repeats a secret. It writes `<redacted>` in place of the value, and it does not read credential files such as `.env` in full.
 
 ```sh
 node <skill-dir>/scripts/check-findings.mjs findings.json
@@ -89,18 +92,24 @@ The skill writes only in its own folder. It writes in one of three cases: a revi
 
 | File | Contents |
 |---|---|
-| `repo-knowledge.md` | Facts about this repository: commands, stack, domain model, known failures. Committed and shared. |
+| `repo-knowledge.md` | Facts about this repository: commands, stack, domain model, known failures. Local to you and git-ignored. |
 | `reference/learned-rules.md` | Checks that are useful in any repository. |
 | `reference/stacks/` | Checks for one language or tool. |
 
-The skill never learns from the change under review. It tells you about each change to these files at the end of the reply. If the skill folder is in the repository, a change to the rules has an effect only after it gets to the base branch. When a change edits the skill folder, the skill reviews that change with the rules and `repo-knowledge.md` from the base branch.
+The skill never learns from the change under review. It tells you about each change to these files at the end of the reply. If the skill folder is in the repository, a change to the rules has an effect only after it gets to the base branch. When a change edits the skill folder, the skill reviews that change with the rules from the base branch. A branch that adds `repo-knowledge.md` to git is reported as a finding.
+
+## Measure the skill
+
+`evals/` holds past changes with known issues, and a script that scores a review run for precision, recall and false alarms. Run each new version of the skill on the same cases, and compare. See `evals/README.md`.
 
 ## Folder layout
 
 ```text
 SKILL.md                         The method, the orient step, arguments and learning rules
 README.md                        This file
-scripts/check-findings.mjs       The checker for finding locations and quotes
+scripts/check-findings.mjs       The checker for finding locations, quotes and coverage
+.gitignore                       Keeps repo-knowledge.md local
+evals/                           Cases with known issues, and the scoring script
 reference/
   generic-rules.md               Defect classes for all languages (G1-G10)
   core-checklist.md              Core checklist and third-party integrations (Sections 4-5)

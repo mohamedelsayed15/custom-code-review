@@ -67,7 +67,7 @@ Alongside Confirmed or Conditional, give every finding a score from 0 to 100:
 - **75:** very likely real and important; you read the code path and found no layer that prevents it.
 - **100:** certain; you reproduced it or the code leaves no other reading.
 
-An `AGENTS.md` rule violation scores 75 or more only if the rule names the thing the code does. Drop findings below the effort level's threshold (SKILL.md, Arguments and modes). Never drop a P0 or P1 only for a low score: turn it into an open question that says what would confirm it.
+An `AGENTS.md` rule violation scores 75 or more only if the rule names the thing the code does. Drop findings below the effort level's threshold (SKILL.md, Arguments and modes). Never drop a P0 or P1, or a finding about concurrency, memory safety, security, data integrity or a behavior change, only for a low score: turn it into an open question that says what would confirm it.
 
 ### Confidence
 
@@ -140,6 +140,7 @@ Example:
 - If the issue is conditional, state the condition.
 - If line numbers are unavailable, give the file and function or symbol; never fabricate a line number.
 - Quote only as much code as is needed to locate the problem.
+- Never repeat a secret. In the finding, the JSON `evidence` and the PR comment, quote the line with the value replaced by `<redacted>`, for example `API_KEY = "<redacted>"`. The checker accepts `<redacted>` in place of any text. Report a credential file by its path only (SKILL.md, Stage 3).
 - For undisclosed vulnerabilities in public repositories, avoid publishing exploit details in review comments; describe the fix and coordinate disclosure privately.
 
 ------------------------------------------------------------------------
@@ -436,10 +437,11 @@ Before submitting the review, check every item:
 - [ ] I read `generic-rules.md` and `learned-rules.md` and applied them.
 - [ ] The review follows `writing-style.md`: simple words with one meaning, active voice, instructions of 20 words or fewer, descriptions of 25 words or fewer, and code and quotes copied exactly.
 - [ ] I ended with the fix choices: one question for each finding, the recommended fix first, and an `Ignore` option (or the options in the text where Section 21 says so).
-- [ ] I ran `scripts/check-findings.mjs` on the findings and corrected what it reported without moving findings off the line they are about.
+- [ ] I ran `scripts/check-findings.mjs` on the findings and the coverage lists, and corrected what it reported without moving findings off the line they are about.
+- [ ] No secret value appears in the review; each one is `<redacted>`, and I read no credential file in full.
 - [ ] I diffed against the base revision (the merge-base), not the tip of the base branch.
 - [ ] For an untrusted target, I ran no check that executes the change's code without the user's agreement.
-- [ ] If the target touched this skill's folder, I loaded the rules and `repo-knowledge.md` from the base branch, left the folder out of the reviewed change, and said so in Coverage.
+- [ ] If the target touched this skill's folder, I loaded the rules from the base branch when another author's commits touch it, did not read a tracked `repo-knowledge.md`, left the folder out of the reviewed change, and said so in Coverage.
 - [ ] If I wrote to a knowledge file, one of the three triggers applied (an issue was found, something changed, the user asked), it came from the user, a tool run or a confirmed finding (never from the change under review), it was not a duplicate, it fit the limits, and I told the user.
 - [ ] I read the repository's `AGENTS.md` and `repo-knowledge.md`, detected its stack, and loaded the matching packs.
 - [ ] I did not post, push, commit or edit anything, apart from the skill's own knowledge files (`repo-knowledge.md`, `learned-rules.md`, `stacks/`) under the rules in SKILL.md "Keeping this skill current". I wrote nothing to `AGENTS.md` or any other repository file, and `git status` shows no file that a check I ran created or changed.
