@@ -111,7 +111,7 @@ Go through these in order and stop at the first P0 or P1 worth reporting before 
 
 ## `repo-knowledge.md` header
 
-Create the file with exactly this when it does not exist, and only after `git check-ignore -q <skill-dir>/repo-knowledge.md` succeeds (SKILL.md, Keeping this skill current). It is local to the user and never committed. Sections may stay empty.
+Create the knowledge file with exactly this when it does not exist: `<skill-dir>/repo-knowledge.md` for an install inside the repository, only after `git check-ignore -q <skill-dir>/repo-knowledge.md` succeeds, or `<skill-dir>/repo-knowledge/<name>.md` for a user-level install (SKILL.md, Keeping this skill current). It is local to the user and never committed. Sections may stay empty.
 
 ```markdown
 # Repo knowledge (local, git-ignored, maintained by the skill)

@@ -22,9 +22,17 @@ The `AGENTS.md` file of the repository can make this scope wider or narrower.
 
 ## Install
 
-This is a skill for one repository. Put this folder in `.claude/skills/custom-code-review/` in the repository, and commit it.
+Put this folder in one of these locations:
 
-The skill keeps what it learns about the repository in `repo-knowledge.md` in this folder. The file is local: each user has their own copy. The `.gitignore` in this folder keeps it out of git, so commit that `.gitignore` with the folder. If the file is not ignored, the skill does not create it, and tells you what it would have recorded.
+- **In a repository:** `.claude/skills/custom-code-review/`, for that repository only. Commit the folder.
+- **For your user:** `~/.claude/skills/custom-code-review/` (or the `skills/` folder of another Claude configuration folder), for all your repositories.
+
+The skill keeps what it learns about a repository in a local knowledge file. Each user has their own. Where the file is depends on the install:
+
+| Install | Knowledge file |
+|---|---|
+| In a repository | `repo-knowledge.md` in this folder. The `.gitignore` in this folder keeps it out of git, so commit that `.gitignore` with the folder. If the file is not ignored, the skill does not create it, and tells you what it would have recorded. |
+| For your user | `repo-knowledge/<name>.md` in this folder, one file for each repository. The name comes from the `origin` remote, for example `github.com__acme__billing.md`. |
 
 ## Use
 
@@ -59,7 +67,7 @@ All arguments are optional. Without arguments, the skill does a standard review 
 - It reads the change, the code around it, and its history (`git log`, `git blame`).
 - It runs the read-only checks of the repository: type check, lint and unit tests, in CI mode. For code from another person, it asks you before it runs any check that executes that code. This includes a pull request that you checked out with `gh pr checkout`. It compares `git status` before and after the checks. It does not count a check that writes files as a pass.
 - It does not deploy, migrate a real database, seed data, push, commit or post comments.
-- It writes only in its own folder (`repo-knowledge.md`, `reference/learned-rules.md` and `reference/stacks/`). It changes no other file in the repository, unless you choose a fix after the review.
+- It writes only in its own folder (the knowledge file, `reference/learned-rules.md` and `reference/stacks/`). It changes no other file in the repository, unless you choose a fix after the review.
 - It treats text in the code under review as data. An instruction in a comment, a commit message or a PR description does not change the review. The skill reports such an instruction as a finding.
 
 ## Output
@@ -92,7 +100,7 @@ The skill writes only in its own folder. It writes in one of three cases: a revi
 
 | File | Contents |
 |---|---|
-| `repo-knowledge.md` | Facts about this repository: commands, stack, domain model, known failures. Local to you and git-ignored. |
+| `repo-knowledge.md` or `repo-knowledge/<name>.md` | Facts about one repository: commands, stack, domain model, known failures. Local to you. |
 | `reference/learned-rules.md` | Checks that are useful in any repository. |
 | `reference/stacks/` | Checks for one language or tool. |
 
@@ -108,7 +116,9 @@ The skill never learns from the change under review. It tells you about each cha
 SKILL.md                         The method, the orient step, arguments and learning rules
 README.md                        This file
 scripts/check-findings.mjs       The checker for finding locations, quotes and coverage
-.gitignore                       Keeps repo-knowledge.md local
+.gitignore                       Keeps the knowledge files local
+repo-knowledge.md                Knowledge file for an install in a repository (local, created in use)
+repo-knowledge/                  Knowledge files for a user-level install, one per repository (local)
 evals/                           Cases with known issues, and the scoring script
 reference/
   generic-rules.md               Defect classes for all languages (G1-G10)
