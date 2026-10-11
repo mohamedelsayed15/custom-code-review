@@ -1,6 +1,6 @@
 # Templates and quick checklist
 
-Use these when the user asks for `comment` or `json` output, or wants a quick pass, when asking the fix choices, and when creating `repo-knowledge.md`.
+Use these when the user asks for `comment` or `json` output, or wants a quick pass, and when creating `repo-knowledge.md`.
 
 ## PR comment template (`comment`)
 
@@ -40,24 +40,6 @@ No findings. Checked for correctness, access and isolation, data integrity, migr
 Checked: <the repository's type check, lint and test results>. Not reviewed: <anything skipped>.
 ```
 
-## Fix choices
-
-One question for each finding (`reporting.md` Section 21). Example for the withdrawal finding in `reporting.md` Section 16:
-
-```text
-Header:   P1 Withdraw
-Question: How should the balance check and the debit become one atomic operation?
-Options:
-  1. Conditional update (Recommended)
-     Change the debit to one UPDATE that also checks the balance, and return "insufficient funds" when it updates 0 rows. No lock. Changes withdrawal.service.ts.
-  2. Transaction with a row lock
-     Read the balance with SELECT ... FOR UPDATE in a transaction, then debit. Keeps the current code shape, but holds a row lock during the request.
-  3. Ignore
-     Do not change the code. The finding stays in the review.
-```
-
-The tool adds a last option for a typed answer, and shows all answers for a check before the user submits them.
-
 ## JSON schema (`json`)
 
 ```json
@@ -80,8 +62,7 @@ The tool adds a last option for a typed answer, and shows all answers for a chec
       "line": 0,
       "evidence": "a short quote from the code at or within 3 lines of `line` (exactly once in the file when `line` is null), with any secret value replaced by <redacted>; checked by scripts/check-findings.mjs",
       "problem": "string",
-      "impact": "string",
-      "recommendation": "string"
+      "impact": "string"
     }
   ],
   "open_questions": ["string"],

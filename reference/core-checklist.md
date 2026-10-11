@@ -365,7 +365,7 @@ Do not flag O(n) merely because it is O(n). Explain the input size, call frequen
 - Is backward compatibility considered for exports, event schemas, database fields, and API responses?
 - Are comments explaining why rather than restating what the code does?
 - Do comments, docstrings, and names still describe what the code does? A comment that promises cleanup or protection whose code was commented out or removed leads readers to assume a guarantee that no longer exists.
-- Does the change move an invariant from an enforced mechanism (constraint, trigger, type, test) to a convention (comment, warning header, reviewer discipline)? Point out the weaker guarantee and suggest a test or check that restores it.
+- Does the change move an invariant from an enforced mechanism (constraint, trigger, type, test) to a convention (comment, warning header, reviewer discipline)? Point out the weaker guarantee.
 - Is the mechanism's complexity proportionate to the requirement? Count the failure modes it introduces: caches, version counters, sync steps, generated copies, encoding conventions. If several findings cluster in one mechanism, or a simpler representation meets the same requirement with fewer moving parts, raise a design finding that names the failure modes it would remove. Do not frame it as a preference. When the efficiency gain is small, readability for future maintainers and the ability to debug from logs are legitimate criteria.
 
 Do not demand abstraction for its own sake. Prefer clear, direct code over speculative generality.

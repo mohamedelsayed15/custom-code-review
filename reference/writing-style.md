@@ -4,7 +4,7 @@ Every text this skill writes for a reader follows these rules. They are inspired
 
 ## Where the rules apply
 
-- **Apply them to:** the text review, the PR comment, the fix questions and their options, the string fields in `json` output (`title`, `problem`, `impact`, `recommendation`, `open_questions`, `note`), entries in the knowledge files, and replies about the review.
+- **Apply them to:** the text review, the PR comment, the string fields in `json` output (`title`, `problem`, `impact`, `open_questions`, `note`), entries in the knowledge files, and replies about the review.
 - **Do not apply them to:** code, quoted evidence, commands, file paths, identifiers, error messages, quoted `AGENTS.md` rules and product names. Copy these exactly. They are technical names, and they are always permitted. The one exception: replace a secret value with `<redacted>`.
 
 These rules are the skill's own. Do not say that a review complies with any standard. If a rule would make a statement less precise, keep the precise technical term and split the sentence instead.
@@ -56,14 +56,14 @@ These rules are the skill's own. Do not say that a review complies with any stan
 - **Title:** a short statement of the defect, not a category. Example: `[P1] Two withdrawals at the same time can overdraw an account`.
 - **Problem:** what the code does and when. Start with the trigger: "When two requests…".
 - **Impact:** what goes wrong, and for whom.
-- **Recommendation:** instructions in the imperative, one action in each sentence. Write about the code, not about the author: "Add a unique index on `grants(user_id, role_id)`", not "You should add…".
+- **No recommendation.** A finding does not say how to fix the defect (SKILL.md Section 2.5).
 - **Confidence:** "Confirmed." or "Conditional: <the assumption>."
 - **Open questions:** one direct question each.
 - **Warnings** (an action that can cause damage, for example a migration or a data fix): start with a clear command, then give the reason. "Do not run this migration before the backfill. The new constraint will fail on the existing rows."
 
 ## Example
 
-Before (one sentence of 44 words, five "-ing" forms, stacked hedges, and a description and an instruction mixed together):
+Before (one sentence of 44 words, five "-ing" forms, stacked hedges, and a fix suggestion mixed into the description):
 
 > It seems that the newly introduced caching layer might potentially be returning stale tenant configuration data in scenarios where an admin is updating settings, which could lead to users seeing incorrect behavior, so we should probably consider invalidating the cache entry upon settings update.
 
@@ -72,5 +72,3 @@ After:
 > **Problem:** When an admin changes the tenant settings, the cache keeps the old values until the entry expires.
 >
 > **Impact:** During that time, users of that tenant get the old behavior.
->
-> **Recommendation:** Delete the tenant's cache entry after the settings update commits.

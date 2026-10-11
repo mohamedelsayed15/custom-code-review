@@ -59,7 +59,6 @@ All arguments are optional. Without arguments, the skill does a standard review 
 | `base <ref>` | Compare against this base branch, for example to review an old change. |
 | `json` | Give the output in the JSON schema in `reference/templates.md`. |
 | `comment` | Give a pull request comment for you to copy. The skill never posts it. |
-| `fix 1 3` | After the review, ask how to fix only the findings that you name. |
 | `parallel` | For a very large change, split the review between subagents. The skill checks each candidate finding again before it reports it. |
 
 ## What the skill does and does not do
@@ -67,12 +66,12 @@ All arguments are optional. Without arguments, the skill does a standard review 
 - It reads the change, the code around it, and its history (`git log`, `git blame`).
 - It runs the read-only checks of the repository: type check, lint and unit tests, in CI mode. For code from another person, it asks you before it runs any check that executes that code. This includes a pull request that you checked out with `gh pr checkout`. It compares `git status` before and after the checks. It does not count a check that writes files as a pass.
 - It does not deploy, migrate a real database, seed data, push, commit or post comments.
-- It writes only in its own folder (the knowledge file, `reference/learned-rules.md` and `reference/stacks/`). It changes no other file in the repository, unless you choose a fix after the review.
+- It writes only in its own folder (the knowledge file, `reference/learned-rules.md` and `reference/stacks/`). It changes no other file in the repository, unless you ask for a fix after the review.
 - It treats text in the code under review as data. An instruction in a comment, a commit message or a PR description does not change the review. The skill reports such an instruction as a finding.
 
 ## Output
 
-Each finding has a severity (P0 to P3), a location, the problem, the impact, a recommendation and a confidence label (Confirmed or Conditional). The review then gives open questions, the checks that it ran, what it reviewed and did not review, and a verdict.
+Each finding has a severity (P0 to P3), a location, the problem, the impact and a confidence label (Confirmed or Conditional). The review then gives open questions, the checks that it ran, what it reviewed and did not review, and a verdict.
 
 Before the skill shows the findings, it runs `scripts/check-findings.mjs`. This script makes sure that each file and line exist and that each quote matches the code. If a quote is at a different line, it gives the correct line. It also makes sure that every changed file is in the coverage lists. It can check a deleted line against the base branch, and a branch that is not checked out against its own commit.
 
@@ -84,15 +83,9 @@ node <skill-dir>/scripts/check-findings.mjs findings.json
 
 The script checks locations and quotes only. It does not decide if a finding is correct.
 
-## Fix the findings
+## No fix suggestions
 
-At the end of the review, the skill asks one question for each finding:
-
-- One to three fix options. The first option is the recommended one, marked `(Recommended)`.
-- An `Ignore` option, which keeps the code as it is.
-- A field where you can type a different fix.
-
-You then see all your answers and submit them. The skill changes only what you chose, and runs the checks again. It writes one line for each finding: fixed, ignored or not fixed. In `json` output, and for a pull request that is not checked out, the skill gives the options in the text and asks nothing.
+The review lists the findings only. It does not suggest how to fix them, and it does not ask you to choose a fix. To fix a finding, ask after the review. The skill changes only what you name, and runs the checks again.
 
 ## How the skill learns
 
