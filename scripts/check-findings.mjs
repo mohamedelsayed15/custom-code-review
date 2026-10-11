@@ -17,7 +17,8 @@
 //
 // Which version of the file is read:
 //   - `side: "old"` (a deleted or changed-away line): `rev`, else the report's
-//     `base`. One of them is required.
+//     `base`, which is the merge-base of the base branch and the reviewed
+//     head. One of them is required.
 //   - `side: "new"` or no side: `rev`, else the report's `head`, else the
 //     working tree.
 // Paths are relative to the repository root, wherever the script is run from.
@@ -99,9 +100,11 @@ const linesOf = (file, rev) => {
     let result;
     try {
       if (rev) {
-        const type = git(['cat-file', '-t', `${rev}:${file}`]).trim();
+        // Git paths use forward slashes on every platform.
+        const object = `${rev}:${file.split(path.sep).join('/')}`;
+        const type = git(['cat-file', '-t', object]).trim();
         result = type === 'blob'
-          ? toLines(git(['cat-file', 'blob', `${rev}:${file}`]))
+          ? toLines(git(['cat-file', 'blob', object]))
           : `is not a file at ${rev}`;
       } else {
         const resolved = path.join(root, file);

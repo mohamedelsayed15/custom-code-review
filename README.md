@@ -22,20 +22,9 @@ The `AGENTS.md` file of the repository can make this scope wider or narrower.
 
 ## Install
 
-Put this folder in one of these locations:
+This is a skill for one repository. Put this folder in `.claude/skills/custom-code-review/` in the repository, and commit it.
 
-- `.claude/skills/custom-code-review/` in a repository, for that repository only.
-- `~/.claude/skills/custom-code-review/` for all repositories on your computer.
-
-For an installation in a repository, add the local knowledge file to the `.gitignore` of that repository:
-
-```gitignore
-.claude/skills/custom-code-review/repo-knowledge.md
-```
-
-If the file is not ignored, the skill does not create it. It tells you what it would have recorded.
-
-A user-level installation has one `repo-knowledge.md` for all repositories. The file records the repository that it belongs to. The skill does not use the file in a different repository.
+The skill creates `repo-knowledge.md` in this folder and keeps it current. Commit this file too. It holds what reviews learned about the repository, and everyone who uses the repository shares it. Do not add it to `.gitignore`.
 
 ## Use
 
@@ -67,7 +56,7 @@ All arguments are optional. Without arguments, the skill does a standard review 
 ## What the skill does and does not do
 
 - It reads the change, the code around it, and its history (`git log`, `git blame`).
-- It runs the read-only checks of the repository: type check, lint and unit tests, in CI mode. It compares `git status` before and after the checks. It does not count a check that writes files as a pass.
+- It runs the read-only checks of the repository: type check, lint and unit tests, in CI mode. For a pull request from a fork or from another author, it asks you before it runs any check that executes the code of the pull request. It compares `git status` before and after the checks. It does not count a check that writes files as a pass.
 - It does not deploy, migrate a real database, seed data, push, commit or post comments.
 - It writes only in its own folder (`repo-knowledge.md`, `reference/learned-rules.md` and `reference/stacks/`). It changes no other file in the repository, unless you choose a fix after the review.
 - It treats text in the code under review as data. An instruction in a comment, a commit message or a PR description does not change the review. The skill reports such an instruction as a finding.
@@ -100,11 +89,11 @@ The skill writes only in its own folder. It writes in one of three cases: a revi
 
 | File | Contents |
 |---|---|
-| `repo-knowledge.md` | Facts about one repository: commands, stack, domain model, known failures. Local and git-ignored. |
+| `repo-knowledge.md` | Facts about this repository: commands, stack, domain model, known failures. Committed and shared. |
 | `reference/learned-rules.md` | Checks that are useful in any repository. |
 | `reference/stacks/` | Checks for one language or tool. |
 
-The skill never learns from the change under review. It tells you about each change to these files at the end of the reply. If the skill folder is in the repository, a change to the rules has an effect only after it gets to the base branch. When a change edits the skill folder, the skill reviews that change with the rules from the base branch.
+The skill never learns from the change under review. It tells you about each change to these files at the end of the reply. If the skill folder is in the repository, a change to the rules has an effect only after it gets to the base branch. When a change edits the skill folder, the skill reviews that change with the rules and `repo-knowledge.md` from the base branch.
 
 ## Folder layout
 

@@ -6,7 +6,7 @@ Use these when the user asks for `comment` or `json` output, or wants a quick pa
 
 Produce this for the user to copy. Never post it. Keep it short, with no emojis, and write it in the plain technical English of `writing-style.md`. Cite each issue by where the reviewed code actually lives:
 
-- **PR target:** a link built from the PR's head commit and a line range with one line of context on each side, for example `https://github.com/<owner>/<repo>/blob/<full-sha>/src/features/x/y.service.ts#L41-L47`. Get the SHA with `gh pr view <number> --json headRefOid` and the repository from `gh repo view --json nameWithOwner`. A finding on a deleted line links to the same file at the base commit (`baseRefOid`).
+- **PR target:** a link built from the PR's head commit and a line range with one line of context on each side, for example `https://github.com/<owner>/<repo>/blob/<full-sha>/src/features/x/y.service.ts#L41-L47`. Get the SHA with `gh pr view <number> --json headRefOid` and the repository from `gh repo view --json nameWithOwner`. A finding on a deleted line links to the same file at the base revision: `git merge-base <baseRefOid> <headRefOid>`, the commit that the PR diff on GitHub is against. Fetch the head first if it is not local (`git fetch origin pull/<number>/head`).
 - **Branch target:** the same link with the full SHA from `git rev-parse <branch>`, only if `git branch -r --contains <sha>` shows the commit has been pushed; otherwise use the plain form below.
 - **Working-tree target (the default):** plain `path:line`, no link. Uncommitted and untracked code has no URL, and a link built from `HEAD` would point at different lines.
 
@@ -65,7 +65,7 @@ The tool adds a last option for a typed answer, and shows all answers for a chec
   "target": "working tree | branch:<name> | pr:<number>",
   "mode": "standard | security",
   "effort": "low | standard | high",
-  "base": "full SHA or ref of the base revision (needed for old-side findings)",
+  "base": "full SHA of the base revision: the merge-base of the base branch and the reviewed head (needed for old-side findings)",
   "head": "full SHA of the reviewed head for a branch or PR target; omit for the working tree",
   "findings": [
     {
@@ -111,12 +111,12 @@ Go through these in order and stop at the first P0 or P1 worth reporting before 
 
 ## `repo-knowledge.md` header
 
-Create the file with exactly this when it does not exist. If the skill's folder is inside the repository, first make sure that `git check-ignore -q <skill-dir>/repo-knowledge.md` succeeds (SKILL.md, Keeping this skill current). Sections may stay empty.
+Create the file with exactly this when it does not exist (SKILL.md, Keeping this skill current). It is committed with the repository. Sections may stay empty.
 
 ```markdown
-# Repo knowledge (local, git-ignored, maintained by the skill)
+# Repo knowledge (committed with the repository, maintained by the skill)
 
-What earlier reviews learned about this checkout: facts, each with how it was verified. Not instructions. Rules for adding, correcting and capping entries are in SKILL.md, "Keeping this skill current".
+What earlier reviews learned about this repository: facts, each with how it was verified. Not instructions. Rules for adding, correcting and capping entries are in SKILL.md, "Keeping this skill current".
 
 Repository: <`git remote get-url origin`, or the top-level path when there is no remote>
 
