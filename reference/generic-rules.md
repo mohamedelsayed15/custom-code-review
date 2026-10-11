@@ -13,7 +13,7 @@ Before reporting one of these, look at what the repository's own automation alre
 
 - **Query languages (SQL, NoSQL, search, graph):** user text in the query structure rather than as a bound value: identifiers, keywords, sort fields, limits, raw fragments. Wildcard patterns built from user text without escaping.
 - **Commands:** user text in a shell string, or in an argument position where a leading `-` changes meaning.
-- **Paths and keys:** a filename, object key or path from a request joined without normalising and checking the prefix (`..`, absolute paths, encoded forms, null bytes). A cache or lock key built from user text that lets one tenant address another's.
+- **Paths and keys:** a filename, object key or path from a request joined without normalizing and checking the prefix (`..`, absolute paths, encoded forms, null bytes). A cache or lock key built from user text that lets one tenant address another's.
 - **Prompts:** user or document text placed in an LLM prompt that also drives tools or generates queries. The model's output is untrusted input to whatever executes it.
 - **Logs and headers:** user text with newlines or control characters written to a log, a header or a redirect target.
 - **Outbound requests (SSRF):** a user-supplied URL or host fetched by the server with no allowlist, no block on private and link-local ranges, redirects followed.

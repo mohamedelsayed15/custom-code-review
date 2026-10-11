@@ -47,7 +47,7 @@ When a later review shows that an entry with `Source: review` is wrong (its chec
 
 ### L-002 Probe every refusal a security filter claims to make
 - Added: 2026-10-11 · Source: review
-- Check: for a validator, sanitiser or allowlist whose comment or tests list what it refuses (schema-qualified names, comments, multiple statements, escape strings), feed it one input per claim and confirm each is refused. Check the claims the tests do not cover.
+- Check: for a validator, sanitizer or allowlist whose comment or tests list what it refuses (schema-qualified names, comments, multiple statements, escape strings), feed it one input per claim and confirm each is refused. Check the claims the tests do not cover.
 - Finding when: a claim in the comment or docs is not enforced by the code, and the control is a tenant or privilege boundary.
 - Not a finding when: another layer (database role, search path, read-only transaction) demonstrably enforces it.
 - Example: a query filter documented as refusing schema-qualified names only blocked a short list of schema names.

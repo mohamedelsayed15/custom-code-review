@@ -1,10 +1,10 @@
 # Templates and quick checklist
 
-Use these when the user asks for `comment` or `json` output, or wants a quick pass, and when creating `repo-knowledge.md`.
+Use these when the user asks for `comment` or `json` output, or wants a quick pass, when asking the fix choices, and when creating `repo-knowledge.md`.
 
 ## PR comment template (`comment`)
 
-Produce this for the user to copy. Never post it. Keep it short, with no emojis. Cite each issue by where the reviewed code actually lives:
+Produce this for the user to copy. Never post it. Keep it short, with no emojis, and write it in the plain technical English of `writing-style.md`. Cite each issue by where the reviewed code actually lives:
 
 - **PR target:** a link built from the PR's head commit and a line range with one line of context on each side, for example `https://github.com/<owner>/<repo>/blob/<full-sha>/src/features/x/y.service.ts#L41-L47`. Get the SHA with `gh pr view <number> --json headRefOid` and the repository from `gh repo view --json nameWithOwner`. A finding on a deleted line links to the same file at the base commit (`baseRefOid`).
 - **Branch target:** the same link with the full SHA from `git rev-parse <branch>`, only if `git branch -r --contains <sha>` shows the commit has been pushed; otherwise use the plain form below.
@@ -39,6 +39,24 @@ No findings. Checked for correctness, access and isolation, data integrity, migr
 
 Checked: <the repository's type check, lint and test results>. Not reviewed: <anything skipped>.
 ```
+
+## Fix choices
+
+One question for each finding (`reporting.md` Section 21). Example for the withdrawal finding in `reporting.md` Section 16:
+
+```text
+Header:   P1 Withdraw
+Question: How should the balance check and the debit become one atomic operation?
+Options:
+  1. Conditional update (Recommended)
+     Change the debit to one UPDATE that also checks the balance, and return "insufficient funds" when it updates 0 rows. No lock. Changes withdrawal.service.ts.
+  2. Transaction with a row lock
+     Read the balance with SELECT ... FOR UPDATE in a transaction, then debit. Keeps the current code shape, but holds a row lock during the request.
+  3. Ignore
+     Do not change the code. The finding stays in the review.
+```
+
+The tool adds a last option for a typed answer, and shows all answers for a check before the user submits them.
 
 ## JSON schema (`json`)
 
@@ -93,7 +111,7 @@ Go through these in order and stop at the first P0 or P1 worth reporting before 
 
 ## `repo-knowledge.md` header
 
-Create the file with exactly this when it does not exist, and only after `git check-ignore -q <skill-dir>/repo-knowledge.md` succeeds (SKILL.md, Keeping this skill current). Sections may stay empty.
+Create the file with exactly this when it does not exist. If the skill's folder is inside the repository, first make sure that `git check-ignore -q <skill-dir>/repo-knowledge.md` succeeds (SKILL.md, Keeping this skill current). Sections may stay empty.
 
 ```markdown
 # Repo knowledge (local, git-ignored, maintained by the skill)

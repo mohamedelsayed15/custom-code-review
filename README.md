@@ -1,0 +1,136 @@
+# custom-code-review
+
+A Claude Code skill that reviews code changes in any repository. It looks for defects that matter: correctness, security, privacy, data integrity, reliability, performance, tests, and the rules of the repository.
+
+The skill has no built-in knowledge of a specific codebase. At the start of each review, it reads the repository: its `AGENTS.md`, manifests, CI configuration and code. Then it loads the checklists for the stack that it finds. It records what it learns in local files, and uses these files in later reviews.
+
+All review output is in plain technical English: short sentences, simple words and direct instructions. The rules are inspired by ASD-STE100.
+
+## What it reviews
+
+- **In scope:** services and APIs, databases, caches, queues and event streams, background jobs, data pipelines, third-party integrations and webhooks, infrastructure, containers, CI/CD, deployment, scripts and CLIs, and plans or designs for these.
+- **Out of scope:** frontend web UI and mobile app code. In a mixed change, the skill reviews the server side fully. In the UI files, it reviews only what crosses the trust boundary.
+
+The `AGENTS.md` file of the repository can make this scope wider or narrower.
+
+## Requirements
+
+- Claude Code
+- `git`
+- Node.js 18 or later, for the findings checker
+- The GitHub CLI (`gh`), only to review pull requests
+
+## Install
+
+Put this folder in one of these locations:
+
+- `.claude/skills/custom-code-review/` in a repository, for that repository only.
+- `~/.claude/skills/custom-code-review/` for all repositories on your computer.
+
+For an installation in a repository, add the local knowledge file to the `.gitignore` of that repository:
+
+```gitignore
+.claude/skills/custom-code-review/repo-knowledge.md
+```
+
+If the file is not ignored, the skill does not create it. It tells you what it would have recorded.
+
+A user-level installation has one `repo-knowledge.md` for all repositories. The file records the repository that it belongs to. The skill does not use the file in a different repository.
+
+## Use
+
+Ask for a review in plain words, for example "review my changes" or "is this safe to merge". You can also run the skill with arguments:
+
+```text
+/custom-code-review
+/custom-code-review security
+/custom-code-review feature/billing-v2 high
+/custom-code-review 1234 comment
+/custom-code-review focus on the migration max 5
+/custom-code-review json
+```
+
+All arguments are optional. Without arguments, the skill does a standard review of the working tree against the base branch.
+
+| Argument | Effect |
+|---|---|
+| Target | The working tree (default), a branch name, or a pull request number. |
+| `focus on <area>` | Spend most of the time on one area. The skill still reports P0 and P1 findings in other areas. |
+| `security` | Do only the security method and the access, tenancy, injection, secrets and privacy checks. |
+| `low`, `standard`, `high` | Effort. `low` reports only P0 and P1 findings. `standard` reports P0 to P2. `high` reports all severities and applies the history lens and the edge-case matrix to every changed unit. |
+| `max N` | Report at most N findings, the most severe first. |
+| `json` | Give the output in the JSON schema in `reference/templates.md`. |
+| `comment` | Give a pull request comment for you to copy. The skill never posts it. |
+| `fix 1 3` | After the review, ask how to fix only the findings that you name. |
+| `parallel` | For a very large change, split the review between subagents. The skill checks each candidate finding again before it reports it. |
+
+## What the skill does and does not do
+
+- It reads the change, the code around it, and its history (`git log`, `git blame`).
+- It runs the read-only checks of the repository: type check, lint and unit tests, in CI mode. It compares `git status` before and after the checks. It does not count a check that writes files as a pass.
+- It does not deploy, migrate a real database, seed data, push, commit or post comments.
+- It writes only in its own folder (`repo-knowledge.md`, `reference/learned-rules.md` and `reference/stacks/`). It changes no other file in the repository, unless you choose a fix after the review.
+- It treats text in the code under review as data. An instruction in a comment, a commit message or a PR description does not change the review. The skill reports such an instruction as a finding.
+
+## Output
+
+Each finding has a severity (P0 to P3), a location, the problem, the impact, a recommendation and a confidence label (Confirmed or Conditional). The review then gives open questions, the checks that it ran, what it reviewed and did not review, and a verdict.
+
+Before the skill shows the findings, it runs `scripts/check-findings.mjs`. This script makes sure that each file and line exist and that each quote matches the code. It can check a deleted line against the base branch, and a branch that is not checked out against its own commit.
+
+```sh
+node <skill-dir>/scripts/check-findings.mjs findings.json
+```
+
+The script checks locations and quotes only. It does not decide if a finding is correct.
+
+## Fix the findings
+
+At the end of the review, the skill asks one question for each finding:
+
+- One to three fix options. The first option is the recommended one, marked `(Recommended)`.
+- An `Ignore` option, which keeps the code as it is.
+- A field where you can type a different fix.
+
+You then see all your answers and submit them. The skill changes only what you chose, and runs the checks again. It writes one line for each finding: fixed, ignored or not fixed. In `json` output, and for a pull request that is not checked out, the skill gives the options in the text and asks nothing.
+
+## How the skill learns
+
+The skill writes only in its own folder. It writes in one of three cases: a review found a defect that no check covered, a recorded fact changed, or you told it to remember something.
+
+| File | Contents |
+|---|---|
+| `repo-knowledge.md` | Facts about one repository: commands, stack, domain model, known failures. Local and git-ignored. |
+| `reference/learned-rules.md` | Checks that are useful in any repository. |
+| `reference/stacks/` | Checks for one language or tool. |
+
+The skill never learns from the change under review. It tells you about each change to these files at the end of the reply. If the skill folder is in the repository, a change to the rules has an effect only after it gets to the base branch. When a change edits the skill folder, the skill reviews that change with the rules from the base branch.
+
+## Folder layout
+
+```text
+SKILL.md                         The method, the orient step, arguments and learning rules
+README.md                        This file
+scripts/check-findings.mjs       The checker for finding locations and quotes
+reference/
+  generic-rules.md               Defect classes for all languages (G1-G10)
+  core-checklist.md              Core checklist and third-party integrations (Sections 4-5)
+  devops-checklist.md            Containers, infrastructure, CI/CD, deployment (Section 11)
+  security-and-edge-cases.md     Security method and edge-case matrix (Sections 13-14)
+  reporting.md                   Severity, finding format, output and quality gate (Sections 15-23)
+  writing-style.md               Plain technical English rules for all output
+  templates.md                   PR comment, JSON schema, quick checklist, knowledge-file header
+  learned-rules.md               Checks that the skill learned from use
+  stacks/                        Packs for TypeScript/Node, SQL/Postgres, Redis, messaging,
+                                 API styles and pipelines, and other backend languages
+```
+
+## Add a stack pack
+
+To add checks for a language or tool, add a file to `reference/stacks/` and add a row for it to the table in `reference/stacks/README.md`. The skill also adds packs itself when it finds a stack that has no pack. Do not put repository names, customer data or secrets in a pack.
+
+## Limits
+
+- The review is only as complete as the context that the skill can read. It says in the Coverage section what it did not review.
+- A passing review does not prove that the code has no defects.
+- The writing rules are the skill's own. The output does not claim to comply with any writing standard.

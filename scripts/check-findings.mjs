@@ -34,6 +34,13 @@ const SIDES = new Set(['new', 'old']);
 
 const squash = (text) => String(text).replace(/\s+/g, '');
 
+// A trailing newline ends the last line; it does not start another one.
+const toLines = (text) => {
+  const lines = text.split('\n');
+  if (lines.at(-1) === '') lines.pop();
+  return lines;
+};
+
 const inputPath = process.argv[2];
 if (!inputPath) {
   console.error('usage: check-findings.mjs <findings.json>');
@@ -68,6 +75,22 @@ if (!Array.isArray(findings)) {
   process.exit(2);
 }
 
+// Each revision is resolved once, so a bad one is reported as such and not as
+// a missing file.
+const badRevs = new Map();
+const revProblem = (rev) => {
+  if (!badRevs.has(rev)) {
+    let problem = null;
+    try {
+      git(['rev-parse', '--verify', '--quiet', `${rev}^{commit}`]);
+    } catch {
+      problem = `revision "${rev}" does not exist`;
+    }
+    badRevs.set(rev, problem);
+  }
+  return badRevs.get(rev);
+};
+
 // Returns the file's lines, or a string saying why it cannot be read.
 const lineCache = new Map();
 const linesOf = (file, rev) => {
@@ -76,11 +99,14 @@ const linesOf = (file, rev) => {
     let result;
     try {
       if (rev) {
-        result = git(['show', `${rev}:${file}`]).split('\n');
+        const type = git(['cat-file', '-t', `${rev}:${file}`]).trim();
+        result = type === 'blob'
+          ? toLines(git(['cat-file', 'blob', `${rev}:${file}`]))
+          : `is not a file at ${rev}`;
       } else {
         const resolved = path.join(root, file);
         result = statSync(resolved).isFile()
-          ? readFileSync(resolved, 'utf8').split('\n')
+          ? toLines(readFileSync(resolved, 'utf8'))
           : 'is not a file';
       }
     } catch (error) {
@@ -106,8 +132,11 @@ findings.forEach((f, index) => {
   if (!CONFIDENCES.has(f.confidence)) {
     fail(`confidence "${f.confidence}" is not confirmed or conditional`);
   }
-  if (typeof f.score === 'number' && (f.score < 0 || f.score > 100)) {
-    fail(`score ${f.score} is outside 0-100`);
+  if (f.score != null && !(Number.isInteger(f.score) && f.score >= 0 && f.score <= 100)) {
+    fail(`score ${JSON.stringify(f.score)} is not an integer from 0 to 100`);
+  }
+  if (f.evidence != null && squash(f.evidence) === '') {
+    fail('the quoted evidence is empty');
   }
 
   const side = f.side ?? 'new';
@@ -133,6 +162,12 @@ findings.forEach((f, index) => {
   const rev = f.rev ?? (side === 'old' ? report.base : report.head);
   if (side === 'old' && !rev) {
     fail(`${where(f.line)}: an old-side finding needs "rev" or a top-level "base"`);
+    return;
+  }
+
+  const badRev = rev && revProblem(rev);
+  if (badRev) {
+    fail(badRev);
     return;
   }
 
